@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  COURIER
+  DEFAULT_USER
+}
+
+enum OrderStatus {
+  PENDING
+  ASSIGNED
+  COMPLETED
+}
+
+model User {
+  id          String       @id @default(uuid())
+  email       String       @unique
+  password    String
+  role        UserRole     @default(DEFAULT_USER)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  Admin       Admin?
+  Courier     Courier?
+  DefaultUser DefaultUser?
+
+  @@map("users")
+}
+
+model Admin {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admins")
+}
+
+model Courier {
+  id     String  @id @default(uuid())
+  userId String  @unique
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("couriers")
+}
+
+model DefaultUser {
+  id     String  @id @default(uuid())
+  userId String  @unique
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("default_users")
+}
+
+model MenuItem {
+  id          String          @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  image       String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  orderItems  OrderMenuItem[]
+
+  @@map("menu_items")
+}
+
+model Order {
+  id            String          @id @default(uuid())
+  defaultUserId String
+  courierId     String?
+  status        OrderStatus     @default(PENDING)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  defaultUser   DefaultUser     @relation(fields: [defaultUserId], references: [id], onDelete: Cascade)
+  courier       Courier?        @relation(fields: [courierId], references: [id])
+  orderItems    OrderMenuItem[]
+
+  @@map("orders")
+}
+
+model OrderMenuItem {
+  id         String @id @default(uuid())
+  orderId    String
+  menuItemId String
+  quantity   Int
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@map("order_menu_items")
+  @@unique([orderId, menuItemId])
+}
