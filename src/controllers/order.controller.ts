@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 export class OrderController {
   static async createOrder(req: Request, res: Response) {
     try {
-      const { defaultUserId, items } = req.body
+      const { defaultUserId, items, name, phoneNumber } = req.body
 
       const order = await prisma.order.create({
         data: {
@@ -17,7 +17,9 @@ export class OrderController {
                 quantity: Number(item.quantity),
               }
             ))
-          }
+          },
+          name,
+          phoneNumber,
         }
       }).then(response => response)
 
@@ -128,7 +130,11 @@ export class OrderController {
         where: {
           AND: [
             { courierId: null },
-            { status: "PENDING" },
+            { OR: [
+                { status: "PENDING" },
+                { status: "READY_TO_DELIVER" },
+                { status: "IN_PROGRESS" },
+            ] },
           ]
         },
         include: {
@@ -176,6 +182,46 @@ export class OrderController {
       data: {
         courierId: courierId,
         status: "ASSIGNED",
+      },
+    })
+
+    console.log(updatedOrder)
+
+    if (!updatedOrder) {
+      return res.status(200).json({ message: "Order is not updated :(" })
+    } else {
+      return res.status(200).json(updatedOrder)
+    }
+  }
+
+  static async callOrder(req: Request, res: Response) {
+    const { orderId } = req.body
+
+    const updatedOrder = await prisma.order.update({
+      where: {
+        id: orderId as string,
+      },
+      data: {
+        status: "IN_PROGRESS",
+      }
+    })
+
+    if (!updatedOrder) {
+      return res.status(200).json({ message: "Order is not updated :(" })
+    } else {
+      return res.status(200).json(updatedOrder)
+    }
+  }
+
+  static async afterCall(req: Request, res: Response) {
+    const { orderId } = req.body
+
+    const updatedOrder = await prisma.order.update({
+      where: {
+        id: orderId as string,
+      },
+      data: {
+        status: "READY_TO_DELIVER",
       },
     })
 

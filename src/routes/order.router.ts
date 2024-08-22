@@ -10,5 +10,7 @@ orderRouter.get('/courier-orders', OrderController.getCourierOrders)
 orderRouter.get('/admin-orders', OrderController.getAdminOrders)
 orderRouter.put('/assign-order', OrderController.assignOrder)
 orderRouter.put('/complete-order', OrderController.completeOrder)
+orderRouter.put('/call-order', OrderController.callOrder)
+orderRouter.put('/after-call', OrderController.afterCall)
 
 export default orderRouter

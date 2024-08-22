@@ -15,8 +15,10 @@ enum UserRole {
 
 enum OrderStatus {
   PENDING
-  ASSIGNED
+  IN_PROGRESS
+  READY_TO_DELIVER
   COMPLETED
+  ASSIGNED
 }
 
 model User {
@@ -76,6 +78,8 @@ model Order {
   id            String          @id @default(uuid())
   defaultUserId String
   courierId     String?
+name          String
+  phoneNumber   String
   status        OrderStatus     @default(PENDING)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
